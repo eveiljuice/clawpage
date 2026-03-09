@@ -1,0 +1,10 @@
+node_modules/
+*.log
+.DS_Store
+
+# User data (don't commit to public repo)
+data/users/
+data/activity/
+
+# Local config
+.env

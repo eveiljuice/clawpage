@@ -1,0 +1,11 @@
+{
+  "name": "clawpage",
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "bun run src/server.ts",
+    "sync": "bun run src/sync.ts"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  }
+}
