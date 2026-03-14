@@ -730,6 +730,7 @@ function buildPage(): string {
       <a class="btn" href="https://t.me/share/url?url=${encodeURIComponent(BASE_URL)}&text=${encodeURIComponent("My AI activity page — " + stats.totalDays + " days, " + stats.totalMessages + " messages! 🔥")}" target="_blank"><i data-lucide="send"></i> Telegram</a>
       <a class="btn" href="https://twitter.com/intent/tweet?url=${encodeURIComponent(BASE_URL)}&text=${encodeURIComponent("My AI activity page — " + stats.totalDays + " days, " + stats.totalMessages + " messages! 🔥")}" target="_blank"><i data-lucide="twitter"></i> Twitter</a>
       <button class="btn" onclick="downloadSVG()"><i data-lucide="download"></i> Download SVG</button>
+      <a class="btn" href="/u/USERNAME_PLACEHOLDER/settings"><i data-lucide="settings"></i> Settings</a>
     </div>
 
     <!-- Insights Section (collapsible) -->
@@ -847,6 +848,51 @@ function buildPage(): string {
 
     // Initialize Lucide icons
     lucide.createIcons();
+
+    // ===== THEME LOADING =====
+    const THEMES = {
+      default: {
+        bg: '#08090d', accent: '#dc3c3c', text: '#eaedf3',
+        heatmap: ['#2d333b', '#5c1a1a', '#8b2525', '#c13030', '#ff4444'],
+        font: 'Urbanist', avatar: 'circle', border: 'glow', frame: 'none'
+      },
+      neon: {
+        bg: '#0a0a0a', accent: '#00ff88', text: '#ffffff',
+        heatmap: ['#1a1a1a', '#003322', '#006644', '#00aa66', '#00ff88'],
+        font: 'JetBrains Mono', avatar: 'hexagon', border: 'neon', frame: 'neon'
+      },
+      purple: {
+        bg: '#0d0a1a', accent: '#a855f7', text: '#f8fafc',
+        heatmap: ['#2d1f47', '#3d2b5f', '#4c3575', '#6b46c1', '#a855f7'],
+        font: 'Plus Jakarta Sans', avatar: 'rounded', border: 'gradient', frame: 'glow'
+      },
+      sunset: {
+        bg: '#1a0f0a', accent: '#ff6b35', text: '#fff8f0',
+        heatmap: ['#3d2817', '#5d3a1f', '#7d4c27', '#ff6b35', '#ff8c42'],
+        font: 'Urbanist', avatar: 'circle', border: 'rainbow', frame: 'gold'
+      }
+    };
+
+    function applyThemeVars(theme) {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-deep', theme.bg);
+      root.style.setProperty('--accent', theme.accent);
+      root.style.setProperty('--text-primary', theme.text);
+      root.style.setProperty('--font-display', theme.font + ', sans-serif');
+    }
+
+    function loadLocal() {
+      try {
+        const saved = localStorage.getItem('clawpage-theme');
+        if (saved) {
+          const theme = JSON.parse(saved);
+          applyThemeVars(theme);
+        }
+      } catch (e) {}
+    }
+
+    // Load saved theme on page load
+    loadLocal();
 
     // ===== INSIGHTS =====
     async function loadInsights() {
@@ -1316,7 +1362,632 @@ function buildUserPage(
     .replace(
       /Developer · AI enthusiast · Building with code &amp; companions/,
       user.bio.replace(/&/g, "&amp;").replace(/</g, "&lt;") || "AI Activity Tracker"
-    );
+    )
+    .replace(/USERNAME_PLACEHOLDER/g, user.username);
+}
+
+/** Build settings page for user customization */
+function buildSettingsPage(user: UserProfile, username: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${user.displayName} — Settings</title>
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Urbanist:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@0.344.0/dist/umd/lucide.min.js"></script>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg-deep: #08090d;
+      --bg-surface: #0f1117;
+      --bg-card: rgba(17, 19, 27, 0.7);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(220, 60, 60, 0.4);
+      --text-primary: #eaedf3;
+      --text-secondary: #7a8299;
+      --text-muted: #454d64;
+      --accent: #dc3c3c;
+      --accent-glow: rgba(220, 60, 60, 0.15);
+      --font-display: 'Urbanist', sans-serif;
+      --font-body: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    body {
+      background: var(--bg-deep);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 40px 16px;
+    }
+
+    /* Dot grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+      background-size: 32px 32px;
+      pointer-events: none;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Header */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-card);
+      backdrop-filter: blur(8px);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .back-btn:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .back-btn i { width: 15px; height: 15px; }
+    .page-title {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+    }
+
+    /* Settings sections */
+    .settings-section {
+      background: var(--bg-card);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title i { width: 18px; height: 18px; color: var(--accent); }
+
+    /* Presets */
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .preset-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      padding: 16px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .preset-btn:hover, .preset-btn.active {
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+    .preset-dot {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    /* Form controls */
+    .cust-section {
+      margin-bottom: 20px;
+    }
+    .cust-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      display: block;
+    }
+    .cust-select, .cust-input {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 13px;
+    }
+    .cust-select:focus, .cust-input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    /* Color grids */
+    .color-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .color-item {
+      aspect-ratio: 1;
+      border-radius: 8px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .color-item:hover, .color-item.active {
+      border-color: var(--text-primary);
+      transform: scale(1.1);
+    }
+
+    /* Option groups */
+    .opt-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .opt-btn {
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-surface);
+      color: var(--text-primary);
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+    .opt-btn:hover, .opt-btn.active {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* Preview */
+    .preview-section {
+      text-align: center;
+      padding: 20px;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      margin: 20px 0;
+    }
+    .preview-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), #f0883e);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 24px;
+      margin: 0 auto 12px;
+      color: white;
+    }
+    .preview-name {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* Save section */
+    .save-row {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 10px 16px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-card);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+    .btn:hover {
+      border-color: var(--border-hover);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .btn i { width: 15px; height: 15px; }
+    .btn.primary {
+      background: linear-gradient(135deg, #dc3c3c, #c13030);
+      border-color: transparent;
+      color: white;
+    }
+    .btn.primary:hover {
+      background: linear-gradient(135deg, #ff5555, #dc3c3c);
+      box-shadow: 0 4px 24px rgba(220, 60, 60, 0.3);
+    }
+
+    .cust-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 0;
+    }
+
+    .save-info {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <a href="/u/${username}" class="back-btn">
+        <i data-lucide="arrow-left"></i> Back to profile
+      </a>
+      <div class="page-title">Settings</div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="palette"></i> Theme Presets
+      </div>
+      <div class="preset-grid">
+        <button class="preset-btn" onclick="selectPreset('default')">
+          <div class="preset-dot" style="background: #dc3c3c;">D</div>
+          <span>Default</span>
+        </button>
+        <button class="preset-btn" onclick="selectPreset('neon')">
+          <div class="preset-dot" style="background: #00ff88;">N</div>
+          <span>Neon</span>
+        </button>
+        <button class="preset-btn" onclick="selectPreset('purple')">
+          <div class="preset-dot" style="background: #a855f7;">P</div>
+          <span>Purple</span>
+        </button>
+        <button class="preset-btn" onclick="selectPreset('sunset')">
+          <div class="preset-dot" style="background: #ff6b35;">S</div>
+          <span>Sunset</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="droplets"></i> Custom Colors
+      </div>
+      <div class="cust-section">
+        <label class="cust-label">Background Color</label>
+        <input type="color" class="cust-input" id="bg-color" value="#08090d" onchange="applyColor('bg', this.value)">
+      </div>
+      <div class="cust-section">
+        <label class="cust-label">Accent Color</label>
+        <input type="color" class="cust-input" id="accent-color" value="#dc3c3c" onchange="applyColor('accent', this.value)">
+      </div>
+      <div class="cust-section">
+        <label class="cust-label">Text Color</label>
+        <input type="color" class="cust-input" id="text-color" value="#eaedf3" onchange="applyColor('text', this.value)">
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="activity"></i> Heatmap Colors
+      </div>
+      <div class="color-grid">
+        <div class="color-item" style="background: #2d333b;" onclick="applyHeatmapColor(0, '#2d333b')"></div>
+        <div class="color-item" style="background: #5c1a1a;" onclick="applyHeatmapColor(1, '#5c1a1a')"></div>
+        <div class="color-item" style="background: #8b2525;" onclick="applyHeatmapColor(2, '#8b2525')"></div>
+        <div class="color-item" style="background: #c13030;" onclick="applyHeatmapColor(3, '#c13030')"></div>
+        <div class="color-item" style="background: #ff4444;" onclick="applyHeatmapColor(4, '#ff4444')"></div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="type"></i> Font
+      </div>
+      <div class="cust-section">
+        <select class="cust-select" onchange="applyFont(this.value)">
+          <option value="Urbanist">Urbanist (Default)</option>
+          <option value="Plus Jakarta Sans">Plus Jakarta Sans</option>
+          <option value="JetBrains Mono">JetBrains Mono</option>
+          <option value="Inter">Inter</option>
+          <option value="Roboto">Roboto</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="user-circle"></i> Avatar Shape
+      </div>
+      <div class="opt-group">
+        <button class="opt-btn active" onclick="applyAvatarShape('circle')">Circle</button>
+        <button class="opt-btn" onclick="applyAvatarShape('rounded')">Rounded</button>
+        <button class="opt-btn" onclick="applyAvatarShape('hexagon')">Hexagon</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="sparkles"></i> Avatar Border
+      </div>
+      <div class="opt-group">
+        <button class="opt-btn" onclick="applyAvatarBorder('none')">None</button>
+        <button class="opt-btn active" onclick="applyAvatarBorder('glow')">Glow</button>
+        <button class="opt-btn" onclick="applyAvatarBorder('gradient')">Gradient</button>
+        <button class="opt-btn" onclick="applyAvatarBorder('rainbow')">Rainbow</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="frame"></i> Page Frame
+      </div>
+      <div class="opt-group">
+        <button class="opt-btn active" onclick="applyFrame('none')">None</button>
+        <button class="opt-btn" onclick="applyFrame('glow')">Glow</button>
+        <button class="opt-btn" onclick="applyFrame('neon')">Neon</button>
+        <button class="opt-btn" onclick="applyFrame('gold')">Gold</button>
+        <button class="opt-btn" onclick="applyFrame('holographic')">Holographic</button>
+        <button class="opt-btn" onclick="applyFrame('gradient-border')">Gradient</button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="eye"></i> Live Preview
+      </div>
+      <div class="preview-section">
+        <div class="preview-avatar" id="preview-avatar">${user.displayName.charAt(0).toUpperCase()}</div>
+        <div class="preview-name">${user.displayName}</div>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <div class="section-title">
+        <i data-lucide="save"></i> Save Settings
+      </div>
+      <div class="cust-section">
+        <label class="cust-label">API Token (optional)</label>
+        <input type="text" class="cust-input" id="api-token" placeholder="Enter your API token to sync across devices">
+      </div>
+      <div class="save-row">
+        <button class="btn primary" onclick="saveToServer()">
+          <i data-lucide="cloud-upload"></i> Save to Server
+        </button>
+        <button class="btn" onclick="saveLocal()">
+          <i data-lucide="hard-drive"></i> Save Locally
+        </button>
+      </div>
+      <div class="save-info">
+        Local saves are stored in your browser. Server saves require an API token and sync across devices.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Initialize Lucide icons
+    lucide.createIcons();
+
+    const THEMES = {
+      default: {
+        bg: '#08090d', accent: '#dc3c3c', text: '#eaedf3',
+        heatmap: ['#2d333b', '#5c1a1a', '#8b2525', '#c13030', '#ff4444'],
+        font: 'Urbanist', avatar: 'circle', border: 'glow', frame: 'none'
+      },
+      neon: {
+        bg: '#0a0a0a', accent: '#00ff88', text: '#ffffff',
+        heatmap: ['#1a1a1a', '#003322', '#006644', '#00aa66', '#00ff88'],
+        font: 'JetBrains Mono', avatar: 'hexagon', border: 'neon', frame: 'neon'
+      },
+      purple: {
+        bg: '#0d0a1a', accent: '#a855f7', text: '#f8fafc',
+        heatmap: ['#2d1f47', '#3d2b5f', '#4c3575', '#6b46c1', '#a855f7'],
+        font: 'Plus Jakarta Sans', avatar: 'rounded', border: 'gradient', frame: 'glow'
+      },
+      sunset: {
+        bg: '#1a0f0a', accent: '#ff6b35', text: '#fff8f0',
+        heatmap: ['#3d2817', '#5d3a1f', '#7d4c27', '#ff6b35', '#ff8c42'],
+        font: 'Urbanist', avatar: 'circle', border: 'rainbow', frame: 'gold'
+      }
+    };
+
+    let currentTheme = { ...THEMES.default };
+
+    function applyThemeVars(theme) {
+      const root = document.documentElement;
+      root.style.setProperty('--bg-deep', theme.bg);
+      root.style.setProperty('--accent', theme.accent);
+      root.style.setProperty('--text-primary', theme.text);
+      root.style.setProperty('--font-display', theme.font + ', sans-serif');
+      
+      // Update preview
+      const avatar = document.getElementById('preview-avatar');
+      if (avatar) {
+        avatar.style.background = \`linear-gradient(135deg, \${theme.accent}, #f0883e)\`;
+      }
+    }
+
+    function selectPreset(preset) {
+      // Remove active class from all presets
+      document.querySelectorAll('.preset-btn').forEach(btn => btn.classList.remove('active'));
+      // Add active to selected
+      event.target.closest('.preset-btn').classList.add('active');
+      
+      currentTheme = { ...THEMES[preset] };
+      applyThemeVars(currentTheme);
+      
+      // Update form inputs
+      document.getElementById('bg-color').value = currentTheme.bg;
+      document.getElementById('accent-color').value = currentTheme.accent;
+      document.getElementById('text-color').value = currentTheme.text;
+    }
+
+    function applyColor(type, value) {
+      if (type === 'bg') currentTheme.bg = value;
+      else if (type === 'accent') currentTheme.accent = value;
+      else if (type === 'text') currentTheme.text = value;
+      
+      applyThemeVars(currentTheme);
+    }
+
+    function applyHeatmapColor(level, color) {
+      currentTheme.heatmap[level] = color;
+    }
+
+    function applyFont(font) {
+      currentTheme.font = font;
+      applyThemeVars(currentTheme);
+    }
+
+    function applyAvatarShape(shape) {
+      // Remove active from all shape buttons
+      document.querySelectorAll('[onclick*="applyAvatarShape"]').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      currentTheme.avatar = shape;
+    }
+
+    function applyAvatarBorder(border) {
+      // Remove active from all border buttons
+      document.querySelectorAll('[onclick*="applyAvatarBorder"]').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      currentTheme.border = border;
+    }
+
+    function applyFrame(frame) {
+      // Remove active from all frame buttons
+      document.querySelectorAll('[onclick*="applyFrame"]').forEach(btn => btn.classList.remove('active'));
+      event.target.classList.add('active');
+      currentTheme.frame = frame;
+    }
+
+    function saveLocal() {
+      try {
+        localStorage.setItem('clawpage-theme', JSON.stringify(currentTheme));
+        showToast('Settings saved locally!');
+      } catch (e) {
+        showToast('Failed to save locally');
+      }
+    }
+
+    async function saveToServer() {
+      const token = document.getElementById('api-token').value;
+      if (!token) {
+        showToast('Please enter your API token');
+        return;
+      }
+      
+      try {
+        const res = await fetch('/api/profile', {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': \`Bearer \${token}\`
+          },
+          body: JSON.stringify({ theme: currentTheme })
+        });
+        
+        if (res.ok) {
+          showToast('Settings saved to server!');
+        } else {
+          showToast('Failed to save to server');
+        }
+      } catch (e) {
+        showToast('Network error');
+      }
+    }
+
+    function showToast(message) {
+      // Create or update toast
+      let toast = document.getElementById('toast');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.style.cssText = \`
+          position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+          background: var(--accent); color: white; padding: 12px 24px;
+          border-radius: 8px; font-size: 14px; z-index: 1000;
+          transition: all 0.3s; opacity: 0;
+        \`;
+        document.body.appendChild(toast);
+      }
+      
+      toast.textContent = message;
+      toast.style.opacity = '1';
+      setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+    }
+
+    function loadLocal() {
+      try {
+        const saved = localStorage.getItem('clawpage-theme');
+        if (saved) {
+          currentTheme = { ...JSON.parse(saved) };
+          applyThemeVars(currentTheme);
+          
+          // Update form inputs
+          document.getElementById('bg-color').value = currentTheme.bg;
+          document.getElementById('accent-color').value = currentTheme.accent;
+          document.getElementById('text-color').value = currentTheme.text;
+        }
+      } catch (e) {}
+    }
+
+    // Load saved theme on page load
+    loadLocal();
+  </script>
+</body>
+</html>`;
 }
 
 /** Build landing page */
@@ -1988,6 +2659,19 @@ const server = Bun.serve({
           headers: { "Content-Type": MIME[ext], "Cache-Control": "public, max-age=86400" },
         });
       }
+    }
+
+    // Settings page: /u/:username/settings
+    const settingsMatch = url.pathname.match(/^\/u\/([a-zA-Z0-9_-]+)\/settings$/);
+    if (settingsMatch) {
+      const username = settingsMatch[1].toLowerCase();
+      const user = getUser(username);
+      if (!user) {
+        return new Response("User not found", { status: 404 });
+      }
+      return new Response(buildSettingsPage(user, username), {
+        headers: { "Content-Type": "text/html" },
+      });
     }
 
     // User profile page: /u/:username
